@@ -1,10 +1,10 @@
 package com.mahmoud.automation.tests;
 
 import com.mahmoud.automation.base.BaseTest;
-import com.mahmoud.automation.pages.AddEmployeePage;
+import com.mahmoud.automation.pages.PimAddEmployeePage;
 import com.mahmoud.automation.pages.DashboardPage;
-import com.mahmoud.automation.pages.LoginPage;
 import com.mahmoud.automation.pages.PimEmployeeListPage;
+import com.mahmoud.automation.pages.PimPersonalDetailsPage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -20,25 +20,30 @@ public class PimTest extends BaseTest {
         log.info("Successfully navigated to PIM employee list");
     }
 
-    @Test(description = "User can add a new employee from the PIM module")
+    @Test(description = "Adding an employee with mandatory fields opens Personal Details")
     public void userCanAddNewEmployee() {
-        String firstName = "Mahmoud";
-        String lastName = "Reda";
+        String firstName  = "AutoFirst";
+        String lastName   = "Auto" + System.currentTimeMillis();
+        String employeeId = String.valueOf(System.currentTimeMillis()).substring(4); // 9 digits, fits limit
 
         DashboardPage dashboard = loginAsAdmin();
         PimEmployeeListPage pimList = dashboard.openPimEmployeeList();
+        PimAddEmployeePage addPage = pimList.clickAdd();
 
-        AddEmployeePage addPage = pimList.clickAdd();
-        Assert.assertTrue(addPage.isAddEmployeePageDisplayed(),
-                "Add Employee page was not displayed");
-
-        boolean saved = addPage.enterFirstName(firstName)
+        PimPersonalDetailsPage detailPage = addPage
+                .enterFirstName(firstName)
                 .enterLastName(lastName)
+                .enterEmployeeId(employeeId)
                 .save();
 
-        Assert.assertTrue(saved, "Employee was not saved - Personal Details page did not open");
-        Assert.assertEquals(addPage.getSavedFirstName(), firstName,
-                "Saved first name does not match the entered one");
-        log.info("Employee created and verified: " + firstName + " " + lastName);
+        Assert.assertTrue(detailPage.isOnPersonalDetailsPage(),
+                "Personal Details page was not displayed after saving");
+        Assert.assertTrue(detailPage.getDisplayedEmployeeName().contains(firstName),
+                "First name not in displayed employee name");
+        Assert.assertTrue(detailPage.getDisplayedEmployeeName().contains(lastName),
+                "Last name not in displayed employee name");
+
+        log.info("Employee created successfully: {} {} (ID: {}, length: {})",
+                firstName, lastName, employeeId, employeeId.length());
     }
 }

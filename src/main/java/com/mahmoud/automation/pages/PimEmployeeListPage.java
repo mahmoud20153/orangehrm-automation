@@ -2,12 +2,13 @@ package com.mahmoud.automation.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
 
 public class PimEmployeeListPage extends BasePage {
 
     private final By addButton = By.xpath("//button[normalize-space()='Add']");
-    private final By addEmployeeTitle =
-            By.xpath("//h6[contains(@class,'orangehrm-main-title') and normalize-space()='Add Employee']");
+
     public PimEmployeeListPage(WebDriver driver) {
         super(driver);
     }
@@ -16,10 +17,9 @@ public class PimEmployeeListPage extends BasePage {
         return isDisplayed(addButton);
     }
 
-    public AddEmployeePage clickAdd() {
+    public PimAddEmployeePage clickAdd() {
         click(addButton);
-        return new AddEmployeePage(driver);
+        wait.until(ExpectedConditions.urlContains("/pim/addEmployee"));
+        return new PimAddEmployeePage(driver);
     }
-
-
 }
