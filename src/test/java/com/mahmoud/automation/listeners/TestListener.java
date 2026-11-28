@@ -12,31 +12,34 @@ import org.testng.ITestResult;
 
 import java.io.ByteArrayInputStream;
 
-/**
- * TestNG Listener that hooks into the test lifecycle.
- * Automatically captures a screenshot the moment a test fails.
- */
 public class TestListener implements ITestListener {
 
     private static final Logger log = LoggerFactory.getLogger(TestListener.class);
 
+    /** Test name + first parameter (the case name) when a DataProvider is used. */
+    private String displayName(ITestResult result) {
+        Object[] params = result.getParameters();
+        return params.length > 0 ? result.getName() + "[" + params[0] + "]" : result.getName();
+    }
+
     @Override
     public void onTestStart(ITestResult result) {
-        log.info("▶ STARTING TEST: {}", result.getName());
+        log.info("▶ STARTING TEST: {}", displayName(result));
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        log.info(" PASSED: {}", result.getName());
+        log.info(" PASSED: {}", displayName(result));
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        log.error(" FAILED: {}", result.getName());
+        String name = displayName(result);
+        log.error(" FAILED: {}", name);
         try {
             WebDriver driver = DriverFactory.getDriver();
 
-            String path = ScreenshotUtil.capture(driver, result.getName());
+            String path = ScreenshotUtil.capture(driver, name);
             if (!path.isEmpty()) {
                 log.error("Screenshot saved at: {}", path);
             }
@@ -44,11 +47,10 @@ public class TestListener implements ITestListener {
             Allure.addAttachment("Screenshot on failure", "image/png",
                     new ByteArrayInputStream(ScreenshotUtil.captureBytes(driver)), "png");
         } catch (Exception e) {
-            log.warn("Could not capture screenshot for {}: {}", result.getName(), e.getMessage());
+            log.warn("Could not capture screenshot for {}: {}", name, e.getMessage());
         }
     }
 
-    // We don't need the other methods for now, but they must be implemented (can be empty)
     @Override public void onTestSkipped(ITestResult result) {}
     @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}
     @Override public void onStart(ITestContext context) {}
