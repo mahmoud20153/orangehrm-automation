@@ -6,6 +6,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
+import java.util.List;
+
 
 public class PimAddEmployeePage extends BasePage {
 
@@ -14,6 +16,12 @@ public class PimAddEmployeePage extends BasePage {
     private final By saveButton       = By.xpath("//button[normalize-space()='Save']");
     private final By validationMessage = By.cssSelector(".oxd-input-field-error-message");
     private final By employeeIdInput = By.xpath("//label[normalize-space()='Employee Id']/following::input[1]");
+    private final By employeeIdError = By.xpath(
+            "//label[normalize-space()='Employee Id']/following::span[contains(@class,'oxd-input-field-error-message')][1]");
+
+    public String getEmployeeIdError() {
+        return getText(employeeIdError);
+    }
     public PimAddEmployeePage(WebDriver driver) {
         super(driver);
     }
@@ -50,5 +58,11 @@ public class PimAddEmployeePage extends BasePage {
         field.sendKeys(Keys.chord(Keys.CONTROL, "a"), Keys.BACK_SPACE);
         field.sendKeys(employeeId);
         return this;
+    }
+    public List<String> getValidationMessages() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(validationMessage));
+        return driver.findElements(validationMessage).stream()
+                .map(e -> e.getText().trim())
+                .toList();
     }
 }

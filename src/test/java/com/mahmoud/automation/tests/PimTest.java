@@ -1,12 +1,15 @@
 package com.mahmoud.automation.tests;
 
 import com.mahmoud.automation.base.BaseTest;
+import com.mahmoud.automation.data.PimData;
 import com.mahmoud.automation.pages.PimAddEmployeePage;
 import com.mahmoud.automation.pages.DashboardPage;
 import com.mahmoud.automation.pages.PimEmployeeListPage;
 import com.mahmoud.automation.pages.PimPersonalDetailsPage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.List;
 
 public class PimTest extends BaseTest {
 
@@ -45,5 +48,54 @@ public class PimTest extends BaseTest {
 
         log.info("Employee created successfully: {} {} (ID: {}, length: {})",
                 firstName, lastName, employeeId, employeeId.length());
+    }
+
+    @Test(dataProvider = "missingNameCases", dataProviderClass = PimData.class,
+            description = "Missing mandatory names show 'Required' and keep the user on Add Employee")
+    public void missingNamesShowRequiredValidation(String caseName, String firstName,
+                                                   String lastName, List<String> expectedMessages) {
+        PimAddEmployeePage addPage = loginAsAdmin()
+                .openPimEmployeeList()
+                .clickAdd();
+
+        addPage.enterFirstName(firstName)
+                .enterLastName(lastName)
+                .clickSave();
+
+        Assert.assertEquals(addPage.getValidationMessages(), expectedMessages,
+                "Unexpected validation messages for case: " + caseName);
+        Assert.assertTrue(addPage.isAddEmployeePageDisplayed(),
+                "User should stay on Add Employee for case: " + caseName);
+        log.info("Case [{}] rejected with {}", caseName, expectedMessages);
+    }
+
+    @Test(description = "Adding an employee with an existing Employee Id shows an error and is not saved")
+    public void duplicateEmployeeIdIsRejected() {
+        String employeeId = String.valueOf(System.currentTimeMillis()).substring(4);   // 9 digits
+        String lastName = "Dup" + (System.currentTimeMillis() % 100000);
+
+        DashboardPage dashboard = loginAsAdmin();
+
+        // 1. Create the first employee with a known ID
+        dashboard.openPimEmployeeList()
+                .clickAdd()
+                .enterFirstName("First")
+                .enterLastName(lastName)
+                .enterEmployeeId(employeeId)
+                .save();
+
+        // create a second employee with the same ID
+        PimAddEmployeePage addPage = dashboard.openPimEmployeeList().clickAdd();
+        addPage.enterFirstName("Second")
+                .enterLastName(lastName)
+                .enterEmployeeId(employeeId);
+
+        Assert.assertEquals(addPage.getEmployeeIdError(), "Employee Id already exists",
+                "Unexpected error message for a duplicate Employee Id");
+
+        addPage.clickSave();
+        Assert.assertTrue(addPage.isAddEmployeePageDisplayed(),
+                "User should stay on Add Employee when the Employee Id is duplicated");
+        log.info("Duplicate Employee Id {} correctly rejected", employeeId);
     }
 }
