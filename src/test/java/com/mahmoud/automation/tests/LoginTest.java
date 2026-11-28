@@ -1,6 +1,7 @@
 package com.mahmoud.automation.tests;
 
 import com.mahmoud.automation.base.BaseTest;
+import com.mahmoud.automation.data.LoginData;
 import com.mahmoud.automation.pages.DashboardPage;
 import com.mahmoud.automation.pages.LoginPage;
 import org.testng.Assert;
@@ -21,20 +22,19 @@ public class LoginTest extends BaseTest {
         log.info("Valid login successful - Dashboard displayed");
     }
 
-    @Test(description = "Invalid credentials should show 'Invalid credentials' error")
-    public void invalidLoginShowsErrorMessage() {
+    @Test(dataProvider = "validationCases", dataProviderClass = LoginData.class,
+            description = "Missing credentials show 'Required' validation under the empty fields")
+    public void missingFieldsShowRequiredValidation(String caseName, String username,
+                                                    String password, List<String> expectedMessages) {
         LoginPage loginPage = new LoginPage(driver);
 
-        loginPage.enterUsername("WrongUser")
-                .enterPassword("WrongPass")
-                .submit();
+        loginPage.attemptLogin(username, password);
 
-        Assert.assertTrue(loginPage.isErrorMessageDisplayed(),
-                "Error message was not displayed after invalid login");
-        Assert.assertEquals(loginPage.getErrorMessage(), "Invalid credentials",
-                "Unexpected error message text");
-        log.info("Invalid login correctly rejected with error message");
+        Assert.assertEquals(loginPage.getValidationMessages(), expectedMessages,
+                "Unexpected validation messages for case: " + caseName);
+        log.info("Case [{}] rejected with {}", caseName, expectedMessages);
     }
+
 
     @Test(description = "Logged-in user should be redirected to Login page after logout")
     public void userCanLogoutSuccessfully(){
@@ -52,14 +52,18 @@ public class LoginTest extends BaseTest {
         log.info("Logout successful - user returned to Login page");
     }
 
-    @Test(description = "Empty username and password show 'Required' under both fields")
-    public void userCannotLoginWithEmptyFields() {
+    @Test(dataProvider = "invalidCredentials", dataProviderClass = LoginData.class,
+            description = "Wrong credentials show 'Invalid credentials' and keep the user on Login")
+    public void invalidCredentialsShowError(String caseName, String username, String password) {
         LoginPage loginPage = new LoginPage(driver);
-        loginPage.emptyLogin();
 
-        Assert.assertEquals(loginPage.getValidationMessages(), List.of("Required", "Required"),
-                "Expected a 'Required' message under both fields");
-        log.info("Empty fields correctly rejected with validation messages");
+        loginPage.attemptLogin(username, password);
+
+        Assert.assertEquals(loginPage.getErrorMessage(), "Invalid credentials",
+                "Unexpected error message for case: " + caseName);
+        Assert.assertTrue(driver.getCurrentUrl().contains("/auth/login"),
+                "User should stay on the Login page for case: " + caseName);
+        log.info("Case [{}] correctly rejected", caseName);
     }
 
 }

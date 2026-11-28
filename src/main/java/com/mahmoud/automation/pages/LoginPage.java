@@ -65,5 +65,11 @@ public class LoginPage extends BasePage {
                 .map(e -> e.getText().trim())
                 .toList();
     }
+    public LoginPage attemptLogin(String username, String password) {
+        enterUsername(username);
+        enterPassword(password);
+        submit();
+        return this;
+    }
 
 }
