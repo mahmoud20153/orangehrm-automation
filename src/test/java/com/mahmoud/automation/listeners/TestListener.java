@@ -2,12 +2,15 @@ package com.mahmoud.automation.listeners;
 
 import com.mahmoud.automation.drivers.DriverFactory;
 import com.mahmoud.automation.utils.ScreenshotUtil;
+import io.qameta.allure.Allure;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
+
+import java.io.ByteArrayInputStream;
 
 /**
  * TestNG Listener that hooks into the test lifecycle.
@@ -30,15 +33,18 @@ public class TestListener implements ITestListener {
     @Override
     public void onTestFailure(ITestResult result) {
         log.error(" FAILED: {}", result.getName());
+        try {
+            WebDriver driver = DriverFactory.getDriver();
 
-        // Get the driver for the CURRENT thread (ThreadLocal safety)
-        WebDriver driver = DriverFactory.getDriver();
+            String path = ScreenshotUtil.capture(driver, result.getName());
+            if (!path.isEmpty()) {
+                log.error("Screenshot saved at: {}", path);
+            }
 
-        // Capture the screenshot
-        String screenshotPath = ScreenshotUtil.capture(driver, result.getName());
-
-        if (!screenshotPath.isEmpty()) {
-            log.error("Screenshot attached at: {}", screenshotPath);
+            Allure.addAttachment("Screenshot on failure", "image/png",
+                    new ByteArrayInputStream(ScreenshotUtil.captureBytes(driver)), "png");
+        } catch (Exception e) {
+            log.warn("Could not capture screenshot for {}: {}", result.getName(), e.getMessage());
         }
     }
 

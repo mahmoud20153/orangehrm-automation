@@ -61,4 +61,9 @@ public final class ScreenshotUtil {
             return "";
         }
     }
+
+    public static byte[] captureBytes(WebDriver driver) {
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+    }
+
 }

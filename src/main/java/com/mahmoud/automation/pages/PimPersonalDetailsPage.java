@@ -1,7 +1,9 @@
 package com.mahmoud.automation.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 /**
  * Page Object for the employee's Personal Details screen.
@@ -16,7 +18,11 @@ public class PimPersonalDetailsPage extends BasePage {
     }
 
     public boolean isOnPersonalDetailsPage() {
-        return driver.getCurrentUrl().contains("/pim/viewPersonalDetails");
+        try {
+            return wait.until(ExpectedConditions.urlContains("/pim/viewPersonalDetails"));
+        } catch (TimeoutException e) {
+            return false;
+        }
     }
 
     public String getDisplayedEmployeeName() {

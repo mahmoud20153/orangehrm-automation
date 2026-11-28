@@ -16,10 +16,9 @@
         </classes>
     </test>
 
-    <test name="PIM Module Tests">
+    <test name="PIM Tests">
         <classes>
             <class name="com.mahmoud.automation.tests.PimTest"/>
         </classes>
     </test>
-
 </suite>

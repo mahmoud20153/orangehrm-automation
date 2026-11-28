@@ -4,6 +4,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
+import java.util.List;
+
 public class LoginPage extends BasePage {
 
     private final By usernameInput = By.name("username");
@@ -34,7 +36,6 @@ public class LoginPage extends BasePage {
         enterPassword(password);
         submit();
 
-        // SENIOR MOVE: Wait for the URL to change to /dashboard before proceeding
         // This proves the login API call succeeded and the router navigated
         wait.until(ExpectedConditions.urlContains("/dashboard"));
 
@@ -56,6 +57,13 @@ public class LoginPage extends BasePage {
 
     public boolean isEmptyErrorMessageDisplayed() {
         return isDisplayed(validationMessage);
+    }
+
+    public List<String> getValidationMessages() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(validationMessage));
+        return driver.findElements(validationMessage).stream()
+                .map(e -> e.getText().trim())
+                .toList();
     }
 
 }
